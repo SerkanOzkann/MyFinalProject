@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 using Autofac;
@@ -37,32 +38,40 @@ namespace WebAPI
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
-        {   
+        {
             //Autofac, Ninject,CastleWindsor StructureMap,LightInject,DryInject --> IoC Container
             //AOP= 
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
+            TokenOptions _tokenOptions = new TokenOptions();
+
+            var a =Configuration.GetSection("TokenOptions").Get<TokenOptions>();
+
+            _tokenOptions = new TokenOptions
+            {
+                Audience = Configuration["TokenOptions:Audience"],
+                Issuer = Configuration["TokenOptions:Issuer"],
+                ServerSecret = Configuration["TokenOptions:ServerSecret"],
+                AccessTokenExpiration = Convert.ToInt32(Configuration["TokenOptions:AccessTokenExpiration"])
+
+            };
+
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             //services.AddSingleton<IProductService,ProductManager>(); // Bana arka planda bir referans oluştur.
             //services.AddSingleton<IProductDal, EfProductDal>();
-            var tokenOptions = Configuration.GetSection("TokenOptions").Get<TokenOptions>();
-              
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-               .AddJwtBearer(options =>
-             {
 
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("thisismy"));
+            services.AddAuthentication(x => 
+                { x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; x.DefaultChallengeScheme =
+                    JwtBearerDefaults.AuthenticationScheme; })
+                .AddJwtBearer(x =>
+                { x.RequireHttpsMetadata = false; x.SaveToken = true; x.TokenValidationParameters =
+                    new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true, IssuerSigningKey = key, ValidateIssuer = true, ValidateAudience = true
 
-            options.TokenValidationParameters = new TokenValidationParameters
-           {
-               ValidateIssuer = true,
-               ValidateAudience = true,
-              ValidateLifetime = true,
-               ValidIssuer = tokenOptions.Issuer,
-               ValidAudience = tokenOptions.Audience,
-              ValidateIssuerSigningKey = true,
-                       IssuerSigningKey = SecurityKeyHelper.CreateSecurityKey(tokenOptions.SecurityKey)
-                  };
-                });
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+                    }; });
             ServiceTool.Create(services);
 
         }
@@ -79,9 +88,9 @@ namespace WebAPI
                 app.UseHsts();
             }
             app.UseHttpsRedirection();
-           
+
             app.UseAuthentication(); //hangi yapılar sırasıyla devreye girer onu gosterır.
-            
+
             app.UseHttpsRedirection();
             app.UseMvc();
         }

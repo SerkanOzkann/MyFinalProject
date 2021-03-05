@@ -12,22 +12,33 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Core.Utilities.Security.JWT
 {
-    public class JwtHelper : ITokenHelper
+    public  class JwtHelper : ITokenHelper
     {
         public IConfiguration Configuration { get; } //appsetting deki dosyaları okumaya yarar.
-        private TokenOptions _tokenOptions;
+        private  TokenOptions _tokenOptions;
         private DateTime _accessTokenExpiration;
         public JwtHelper(IConfiguration configuration)
         {
             Configuration = configuration;
-            _tokenOptions = Configuration.GetSection("TokenOptions").Get<TokenOptions>();
-            
+
+
+
+            _tokenOptions = new TokenOptions
+            {
+                Audience = Configuration["TokenOptions:Audience"],
+                Issuer = Configuration["TokenOptions:Issuer"],
+                ServerSecret = Configuration["TokenOptions:ServerSecret"],
+                AccessTokenExpiration = Convert.ToInt32(Configuration["TokenOptions:AccessTokenExpiration"])
+
+            };
+
+
 
         }
         public AccessToken CreateToken(User user, List<OperationClaim> operationClaims)
         {
             _accessTokenExpiration = DateTime.Now.AddMinutes(_tokenOptions.AccessTokenExpiration);
-            var securityKey = SecurityKeyHelper.CreateSecurityKey(_tokenOptions.SecurityKey);
+            var securityKey = SecurityKeyHelper.CreateSecurityKey(_tokenOptions.ServerSecret);
             var signingCredentials = SigningCredentialsHelper.CreateSigningCredentials(securityKey);
             var jwt = CreateJwtSecurityToken(_tokenOptions, user, signingCredentials, operationClaims);
             var jwtSecurityTokenHandler = new JwtSecurityTokenHandler();

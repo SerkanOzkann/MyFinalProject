@@ -22,8 +22,12 @@ namespace WebAPI
             var host = new WebHostBuilder().
               UseKestrel().ConfigureServices(services => 
                   services.AddSingleton<IServiceProviderFactory<ContainerBuilder>>(new AutofacServiceProviderFactory()))
+              .ConfigureAppConfiguration(cb => { cb.AddJsonFile("appsettings.json", optional: false).AddEnvironmentVariables(); })
+
               .UseContentRoot(Directory.GetCurrentDirectory()).UseIISIntegration()
               .UseStartup<Startup>().Build(); host.Run();
+
+
         }
     }
 }
