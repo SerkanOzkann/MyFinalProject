@@ -87,7 +87,7 @@ namespace WebAPI
             {
                 app.UseHsts();
             }
-            app.UseHttpsRedirection();
+            
 
             app.UseAuthentication(); //hangi yapılar sırasıyla devreye girer onu gosterır.
 
