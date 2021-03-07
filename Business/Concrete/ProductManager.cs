@@ -13,6 +13,9 @@ using Core.CrossCuttingConcerns.Validation;
 using FluentValidation;
 using System.Linq;
 using Business.BusinessAspects.Autofac;
+using Core.Aspects.Autofac.Caching;
+using Core.Aspects.Performance;
+using Core.Aspects.Transaction;
 using Core.Utilities.Business;
 
 namespace Business.Concrete
@@ -29,8 +32,9 @@ namespace Business.Concrete
             _categoryService = categoryService;
         }
 
-        [SecuredOperation("product.add,admin")]
+        //[SecuredOperation("product.add,admin")]
         [ValidationAspect(typeof(ProductValidator))]
+        [CacheRemoveAspect("IProductService.Get")]
         public IResult Add(Product product)
         {
          IResult result=   BusinessRules.Run(CheckIfProductNameExists(product.ProductName),
@@ -46,6 +50,8 @@ namespace Business.Concrete
             return new SuccessResult(Messages.ProductAdded);      
         }
 
+
+        [CacheAspect]  //key,value
         public IDataResult<List<Product>> GetAll()
         {
             //bir iş sınıfı başka sınıfları new'lemez. 
@@ -67,6 +73,8 @@ namespace Business.Concrete
             return new SuccessDataResult<List<Product>> (_productDal.GetAll(p => p.CategoryId == Id));
         }
 
+        [CacheAspect]
+        [PerformanceAspect(5)]
         public IDataResult<Product> GetById(int productId)
         {
             return new SuccessDataResult<Product> ( _productDal.Get(p => p.ProductId == productId));
@@ -110,6 +118,19 @@ namespace Business.Concrete
                 return new ErrorResult(Messages.CategoryLimitExceded);
             }
             return new SuccessResult();
+        }
+
+        [TransactionScopeAspect]
+        public IResult AddTransactionalTest(Product product)
+        {
+            Add(product);
+            if (product.UnitPrice < 10)
+            {
+                throw new Exception("");
+            }
+
+            Add(product);
+            return null;
         }
     }
 }

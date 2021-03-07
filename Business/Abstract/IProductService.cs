@@ -21,5 +21,7 @@ namespace Business.Abstract
         IDataResult<Product> GetById(int productId); //tek başına ürün döndürür.
 
        IResult Add(Product product);
+
+       IResult AddTransactionalTest(Product product);
     }
 }

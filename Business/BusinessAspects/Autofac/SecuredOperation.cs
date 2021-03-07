@@ -1,16 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Business.Constants;
-using Castle.DynamicProxy;
-using Core.Extencions;
-using Core.Utilities.Interceptors;
+﻿using Core.Utilities.Interceptors;
 using Core.Utilities.IoC;
 using Microsoft.AspNetCore.Http;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Castle.DynamicProxy;
 using Microsoft.Extensions.DependencyInjection;
+using Core.Extensions;
+using Business.Constants;
 
 namespace Business.BusinessAspects.Autofac
 {
+    //JWT
     public class SecuredOperation : MethodInterception
     {
         private string[] _roles;
@@ -33,6 +34,7 @@ namespace Business.BusinessAspects.Autofac
                     return;
                 }
             }
+
             throw new Exception(Messages.AuthorizationDenied);
         }
     }

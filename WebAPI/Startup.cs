@@ -8,6 +8,8 @@ using Autofac;
 using Business.Abstract;
 using Business.Concrete;
 using Business.DependencyResolvers.Autofac;
+using Core.DependencyResolvers;
+using Core.Extensions;
 using Core.Utilities.IoC;
 using Core.Utilities.Security.Encryption;
 using Core.Utilities.Security.JWT;
@@ -57,7 +59,7 @@ namespace WebAPI
 
             };
 
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            
             //services.AddSingleton<IProductService,ProductManager>(); // Bana arka planda bir referans oluştur.
             //services.AddSingleton<IProductDal, EfProductDal>();
 
@@ -72,7 +74,10 @@ namespace WebAPI
                         ValidateIssuerSigningKey = true, IssuerSigningKey = key, ValidateIssuer = true, ValidateAudience = true
 
                     }; });
-            ServiceTool.Create(services);
+            services.AddDependencyResolvers(new ICoreModule[]
+            {
+                new CoreModule()
+            });
 
         }
 
@@ -88,9 +93,9 @@ namespace WebAPI
                 app.UseHsts();
             }
             
-
+            
             app.UseAuthentication(); //hangi yapılar sırasıyla devreye girer onu gosterır.
-
+           
             app.UseHttpsRedirection();
             app.UseMvc();
         }
